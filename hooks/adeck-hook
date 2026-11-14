@@ -1,0 +1,45 @@
+#!/bin/sh
+# adeck-hook <event|gate|decide> <HookName>. Fail-open: any error → no stdout, exit 0.
+[ -n "$ADECK_NESTED" ] && exit 0                     # our own summarizer calls never re-enter
+SOCK="$HOME/Library/Application Support/AgentDeck/adeck.sock"
+[ -S "$SOCK" ] || exit 0
+c() { curl -s --fail --unix-socket "$SOCK" -H "X-Adeck-Pid: $PPID" -H "X-Adeck-Host: ${__CFBundleIdentifier:-$TERM_PROGRAM}" -H "X-Adeck-Entry: ${CLAUDE_CODE_ENTRYPOINT:-}" "$@" 2>/dev/null; }
+if [ "$1" = event ]; then c -m 0.3 --data-binary @- "http://adeck/v1/event/$2" >/dev/null; exit 0; fi
+# Validate only the decision path; event/PASS latency stays unchanged. Missing Python fails open.
+valid_response() {
+  python3 -I -c '
+import json, sys
+def reject(_): raise ValueError()
+try:
+    value = json.load(sys.stdin, parse_constant=reject)
+    out = value.get("hookSpecificOutput") if isinstance(value, dict) else None
+    if not isinstance(out, dict) or out.get("hookEventName") != sys.argv[1]: sys.exit(1)
+    if sys.argv[1] == "PermissionRequest":
+        decision = out.get("decision")
+        valid = isinstance(decision, dict) and decision.get("behavior") in ("allow", "deny")
+    else:
+        valid = sys.argv[1] == "PreToolUse" and out.get("permissionDecision") in ("allow", "deny")
+    sys.exit(0 if valid else 1)
+except (ValueError, TypeError, OSError):
+    sys.exit(1)
+' "$1" 2>/dev/null
+}
+R=$(c -m 0.5 --data-binary @- "http://adeck/v1/$1/$2") || exit 0
+case "$R" in
+  "DECIDE "*) if printf '%s' "${R#DECIDE }" | valid_response "$2"; then printf '%s' "${R#DECIDE }"; fi; exit 0 ;;
+  "HOLD "*)   ;;
+  *)          exit 0 ;;                               # PASS or anything unexpected
+esac
+# Held: the daemon streams 4 spaces/s as a heartbeat, then the decision JSON (or nothing).
+# Under 1 byte/s for 6 s = hung daemon → curl aborts → fail open. Leading spaces are valid JSON.
+# $TMPDIR, not `mktemp -t` (which on macOS ignores it), so the stale sweep below and the tests see the same directory.
+OUT=$(mktemp "${TMPDIR:-/tmp}/adeck.XXXXXXXX") || exit 0
+# X-Adeck-Hook-Pid = this shell: the daemon releases the hold (handled elsewhere) as soon as it dies, even if curl survives.
+curl -s --fail --unix-socket "$SOCK" -m 595 --speed-limit 1 --speed-time 6 -H "X-Adeck-Hook-Pid: $$" -o "$OUT" "http://adeck/v1/wait/${R#HOLD }" 2>/dev/null & CP=$!   # direct, so $! is curl
+# Watchdog: a SIGKILLed shell runs no trap, so this ends its orphan curl and temp file within 1 s. It first sweeps temp
+# files older than any hold (595 s) that an earlier SIGKILL left behind. Detached from stdout so Claude never waits on it.
+( find "${OUT%/*}" -maxdepth 1 -type f -name 'adeck.*' -mmin +11 -exec rm -f {} +
+  while kill -0 $$; do sleep 1; done; kill $CP; rm -f "$OUT" ) </dev/null >/dev/null 2>&1 & WP=$!
+trap 'kill $CP $WP 2>/dev/null; rm -f "$OUT"; exit 0' HUP INT TERM
+if wait $CP && valid_response "$2" < "$OUT"; then cat "$OUT"; fi
+kill $WP 2>/dev/null; rm -f "$OUT"; exit 0

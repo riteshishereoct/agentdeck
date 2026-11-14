@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "extensionVersion": "2.1.323",
+  "measuredAt": null,
+  "deepLink": "cursor://anthropic.claude-code/open?session={session}",
+  "categories": {
+    "Bash": 3,
+    "EditWrite": 3,
+    "Web": 3,
+    "MCP": 3,
+    "Question": 3,
+    "ExitPlanMode": 3,
+    "Other": 3
+  }
+}

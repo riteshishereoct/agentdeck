@@ -1,0 +1,48 @@
+{
+  "model": "opus",
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)"
+    ]
+  },
+  "env": {
+    "FOO": "bar"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "kb session-start"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "graphify hook pretool"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "gstack stop-hook",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

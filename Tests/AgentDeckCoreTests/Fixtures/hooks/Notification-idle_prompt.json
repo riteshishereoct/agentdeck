@@ -1,0 +1,9 @@
+{
+  "session_id": "s-1111",
+  "transcript_path": "/tmp/adk-fixture/s-1111.jsonl",
+  "cwd": "/Users/me/proj",
+  "permission_mode": "default",
+  "hook_event_name": "Notification",
+  "message": "Claude is waiting for your input",
+  "notification_type": "idle_prompt"
+}

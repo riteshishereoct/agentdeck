@@ -1,0 +1,14 @@
+{
+  "session_id": "s-1111",
+  "transcript_path": "/tmp/adk-fixture/s-1111.jsonl",
+  "cwd": "/Users/me/proj",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/Users/me/proj/routes.js",
+    "old_string": "a\nb\nc",
+    "new_string": "x\ny"
+  },
+  "tool_use_id": "toolu_02"
+}

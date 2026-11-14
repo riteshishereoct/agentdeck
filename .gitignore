@@ -1,0 +1,28 @@
+# Allowlist: ignore everything at the root, then re-include public paths.
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/.gitleaks.toml
+!/Package.swift
+!/Sources/
+!/Tests/
+!/Resources/
+!/config/
+!/hooks/
+!/installer/
+!/scripts/
+!/checks/
+!/distribution/
+!/docs/
+!/tools/
+
+# Never publish these, even inside re-included directories
+build/
+.build/
+releases*/
+*.zip
+.DS_Store
+xcuserdata/
+__pycache__/
+*.pyc

@@ -1,0 +1,3 @@
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_04","name":"TaskCreate","input":{"subject":"a"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_05","name":"TaskCreate","input":{"subject":"b"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_06","name":"TaskUpdate","input":{"taskId":"1","status":"completed"}}]}}

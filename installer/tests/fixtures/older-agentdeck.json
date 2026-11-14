@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "graphify hook pretool"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/x/.agentdeck/bin/adeck-hook gate PreToolUse",
+            "timeout": 300
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "gstack stop-hook",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "/Users/x/.agentdeck/bin/adeck-hook event Stop",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "session_id": "s-1111",
+  "transcript_path": "/tmp/adk-fixture/s-1111.jsonl",
+  "cwd": "/Users/me/proj",
+  "permission_mode": "default",
+  "hook_event_name": "Stop",
+  "last_assistant_message": "Added compound index.\nQuery 4.1s → 180ms.\nThird line.",
+  "stop_hook_active": false
+}

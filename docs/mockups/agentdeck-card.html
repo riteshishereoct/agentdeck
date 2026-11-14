@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentDeck Card Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f5f7; --fg:#1b1f27; --muted:#5d6675; --panel:#ffffff; --line:#d9dde5;
+  --card:rgba(255,255,255,.94); --card-line:#cfd5df; --shadow:0 12px 36px rgba(20,30,50,.25);
+  --code-bg:#f0f2f6; --btn:#eef0f5; --btn-hover:#e2e6ee; --focus:#1a6cf0;
+  --idle:#8b93a1; --working:#2f7bf5; --need:#d98a00; --turn:#1f9d55; --err:#d93a3a;
+  --primary:#1f9d55; --primary-fg:#fff; --danger:#c62f2f; --danger-fg:#fff;
+  --wall1:#9ec3ff; --wall2:#e6c6ff; --win:rgba(255,255,255,.55); --win-line:rgba(255,255,255,.8); --menubar:rgba(255,255,255,.55);
+  --add:#1c7a3d; --del:#b3261e; --add-bg:rgba(31,157,85,.12); --del-bg:rgba(217,58,58,.12);
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12141a; --fg:#e8ebf2; --muted:#a0a8b8; --panel:#1b1e26; --line:#323744;
+    --card:rgba(28,31,40,.94); --card-line:#3d4352; --shadow:0 12px 36px rgba(0,0,0,.6);
+    --code-bg:#12151c; --btn:#2a2f3b; --btn-hover:#363c4b; --focus:#6ea2ff;
+    --idle:#9099a8; --working:#5b9bff; --need:#f0a929; --turn:#3fcf80; --err:#ff6b6b;
+    --primary:#2fb467; --primary-fg:#06140c; --danger:#e25555; --danger-fg:#1a0505;
+    --wall1:#1d2a4d; --wall2:#3b2552; --win:rgba(40,44,58,.7); --win-line:rgba(255,255,255,.12); --menubar:rgba(20,22,30,.6);
+    --add:#5bd68c; --del:#ff8a80; --add-bg:rgba(63,207,128,.14); --del-bg:rgba(255,107,107,.14);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12141a; --fg:#e8ebf2; --muted:#a0a8b8; --panel:#1b1e26; --line:#323744;
+  --card:rgba(28,31,40,.94); --card-line:#3d4352; --shadow:0 12px 36px rgba(0,0,0,.6);
+  --code-bg:#12151c; --btn:#2a2f3b; --btn-hover:#363c4b; --focus:#6ea2ff;
+  --idle:#9099a8; --working:#5b9bff; --need:#f0a929; --turn:#3fcf80; --err:#ff6b6b;
+  --primary:#2fb467; --primary-fg:#06140c; --danger:#e25555; --danger-fg:#1a0505;
+  --wall1:#1d2a4d; --wall2:#3b2552; --win:rgba(40,44,58,.7); --win-line:rgba(255,255,255,.12); --menubar:rgba(20,22,30,.6);
+  --add:#5bd68c; --del:#ff8a80; --add-bg:rgba(63,207,128,.14); --del-bg:rgba(255,107,107,.14);
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans);overflow-x:hidden}
+.page{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:18px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 12px}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;display:grid;gap:10px}
+.grp{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.grp b{font-size:12px;color:var(--muted);font-weight:600;min-width:96px}
+.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--btn);color:var(--fg);border-radius:8px;padding:6px 10px;cursor:pointer;position:relative;overflow:hidden;min-height:32px}
+.btn:hover{background:var(--btn-hover)}
+.btn:focus-visible,.mask:focus-visible,.risk:focus-visible,.hdr:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.btn[aria-pressed="true"]{border-color:var(--focus);box-shadow:inset 0 0 0 1px var(--focus)}
+.btn.primary{background:var(--primary);color:var(--primary-fg);border-color:transparent;font-weight:600}
+.btn.danger{background:var(--danger);color:var(--danger-fg);border-color:transparent;font-weight:600}
+.btn.disarmed{opacity:.55;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.12) 6px 12px);cursor:not-allowed}
+.btn .arm{display:none;font-weight:400;font-size:11px;margin-left:4px}
+.btn.disarmed .arm{display:inline}
+.btn.hold::before{content:"";position:absolute;inset:0;background:rgba(255,255,255,.4);transform-origin:left;transform:scaleX(var(--p,0));pointer-events:none}
+kbd{font:12px var(--mono);background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:12px}
+.stage{position:relative;height:640px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(135deg,var(--wall1),var(--wall2))}
+.menubar{position:absolute;inset:0 0 auto 0;height:24px;background:var(--menubar);font-size:11px;padding:3px 12px;color:var(--fg);backdrop-filter:blur(8px)}
+.win{position:absolute;left:5%;top:70px;width:58%;height:62%;background:var(--win);border:1px solid var(--win-line);border-radius:10px;padding:14px;display:grid;gap:10px;align-content:start}
+.win i{display:block;height:9px;border-radius:5px;background:var(--win-line)}
+.win i:nth-child(2){width:70%}.win i:nth-child(3){width:85%}.win i:nth-child(4){width:40%}.win i:nth-child(5){width:60%}
+.win small{color:var(--muted);font-size:11px}
+.card{position:absolute;left:0;top:0;z-index:5;background:var(--card);border:1px solid var(--card-line);box-shadow:var(--shadow);backdrop-filter:blur(14px);display:flex;flex-direction:column;max-height:calc(100% - 50px);user-select:none;-webkit-user-select:none;cursor:grab}
+.card.dragging{cursor:grabbing}
+.card.snap{transition:left .22s ease,top .22s ease}
+.card.collapsed{border-radius:999px;width:max-content;max-width:calc(100% - 32px)}
+.card.expanded{border-radius:16px;width:min(390px,calc(100% - 32px))}
+.card.glow{border-color:var(--need);box-shadow:0 0 0 3px color-mix(in srgb,var(--need) 35%,transparent),var(--shadow);animation:glow 1.6s ease-out 1}
+@keyframes glow{from{box-shadow:0 0 0 10px color-mix(in srgb,var(--need) 45%,transparent),var(--shadow)}}
+.hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;touch-action:none;min-height:38px}
+.pilltxt{flex:1;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.collapsed .pilltxt{flex:none}
+.card.pulse .hdr{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{background:color-mix(in srgb,var(--need) 30%,transparent)}}
+.dot{width:11px;height:11px;border-radius:50%;flex:none;background:var(--idle)}
+.dot.working{background:var(--working)}.dot.needsYou{background:var(--need)}.dot.yourTurn{background:var(--turn)}.dot.error{background:var(--err)}.dot.idle,.dot.waitingInCursor,.dot.quiet,.dot.ended{background:var(--idle)}
+.ibtns{display:flex;gap:4px}
+.ibtns .btn{padding:3px 8px;min-height:26px;font-size:12px}
+#body{overflow:auto;padding:0 12px 12px;touch-action:pan-y;cursor:default}
+.row{border-top:1px solid var(--line);padding:9px 0;display:grid;gap:5px}
+.line{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.line .name{font-weight:600}.line .ttl{color:var(--muted)}.line .meta{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.chip{font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:0 7px}
+.chip.needsYou{color:var(--need);border-color:var(--need)}.chip.working{color:var(--working);border-color:var(--working)}.chip.yourTurn{color:var(--turn);border-color:var(--turn)}
+.small{font-size:12px;color:var(--muted)}
+.bar{height:7px;border-radius:4px;background:var(--btn);overflow:hidden;flex:1;min-width:80px}
+.bar>span{display:block;height:100%;background:var(--working)}
+.subs{margin-left:10px;padding-left:10px;border-left:2px solid var(--line);display:grid;gap:3px;font-size:12px}
+.req{display:grid;gap:9px;padding-top:2px}
+.reqhead{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.q{font:12px var(--mono);background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:8px;overflow-x:auto;white-space:pre;user-select:text;-webkit-user-select:text}
+.wants{display:grid;gap:5px}
+.diff div{white-space:pre}.diff .a{background:var(--add-bg);color:var(--add)}.diff .d{background:var(--del-bg);color:var(--del)}
+.risk{font:inherit;font-size:12px;display:flex;gap:6px;align-items:center;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:8px;padding:5px 8px;cursor:pointer;text-align:left;min-height:30px}
+.rb{font-weight:700;font-size:11px;border-radius:5px;padding:1px 6px;color:#fff}
+.rb.low{background:#5a6a85}.rb.med{background:#b97500}.rb.high{background:#c62f2f}
+pre.full{margin:0;max-height:calc(20 * 1.45em + 16px);overflow:auto;font:12px/1.45 var(--mono);background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;word-break:break-all;user-select:text;-webkit-user-select:text}
+.mask{font:inherit;background:var(--btn);color:var(--fg);border:1px dashed var(--muted);border-radius:4px;padding:0 4px;cursor:pointer}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.inl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.inl input[type=text]{flex:1;min-width:140px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);user-select:text;-webkit-user-select:text}
+.opts{display:grid;gap:6px}
+.opts label{display:flex;gap:8px;align-items:center;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.banner{border:1px dashed var(--muted);border-radius:8px;padding:8px;color:var(--muted);font-size:13px}
+.qn{font-size:12px;color:var(--muted)}
+.toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:7px 14px;border-radius:10px;font-size:13px;z-index:20;max-width:90%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.notif{position:absolute;right:16px;bottom:60px;width:min(330px,calc(100% - 32px));z-index:15;background:var(--card);border:1px solid var(--card-line);border-radius:14px;box-shadow:var(--shadow);padding:10px 12px;display:grid;gap:6px;backdrop-filter:blur(14px)}
+.notif[hidden]{display:none}
+.notif b{font-size:13px}
+.foot{margin:10px 0 0;color:var(--muted);font-size:12px}
+@media (max-width:640px){
+  .stage{height:700px}
+  .grp b{min-width:100%}
+  .win{width:90%}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .card.pulse .hdr{outline:2px solid var(--need);outline-offset:-2px}
+  .card.glow{box-shadow:0 0 0 3px var(--need),var(--shadow)}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>AgentDeck floating card</h1>
+  <p class="sub">Interactive mockup of the overlay UX (spec 8). Hover or click the pill, drag the card, try the buttons and hotkeys.</p>
+
+  <section class="controls" aria-label="Simulation controls">
+    <div class="grp"><b>Simulate</b>
+      <button class="btn" type="button" id="simReq">Simulate new request</button>
+      <button class="btn" type="button" id="simQ">Simulate question</button>
+      <button class="btn" type="button" id="simTurn">Simulate your turn</button>
+      <button class="btn" type="button" id="simElsewhere">Resolve top elsewhere</button>
+    </div>
+    <div class="grp"><b>Attention ladder</b>
+      <button class="btn" type="button" data-ladder="30">30 s</button>
+      <button class="btn" type="button" data-ladder="90">90 s</button>
+      <button class="btn" type="button" data-ladder="590">590 s</button>
+      <span class="small" id="age" aria-live="off">Top request waited: 0:00 (simulated clock)</span>
+    </div>
+    <div class="grp"><b>View</b>
+      <button class="btn" type="button" id="tPriv" aria-pressed="false">Privacy mode</button>
+      <button class="btn" type="button" id="tTheme">Theme: auto</button>
+    </div>
+    <div class="grp"><b>Hotkeys</b>
+      <div class="legend" id="legend">
+        <span><kbd>Ctrl</kbd>+<kbd>Option</kbd>+<kbd>Space</kbd> expand / collapse</span>
+        <span><kbd>Ctrl</kbd>+<kbd>Option</kbd>+<kbd>Y</kbd> allow</span>
+        <span><kbd>Ctrl</kbd>+<kbd>Option</kbd>+<kbd>N</kbd> deny</span>
+        <span><kbd>Ctrl</kbd>+<kbd>Option</kbd>+<kbd>O</kbd> open in Cursor</span>
+        <span><kbd>Ctrl</kbd>+<kbd>Option</kbd>+<kbd>H</kbd> privacy</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="stage" id="stage">
+    <div class="menubar" aria-hidden="true">Mockup desktop</div>
+    <div class="win" aria-hidden="true"><small>Faux editor window</small><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="card collapsed" id="card" role="region" aria-label="AgentDeck">
+      <div class="hdr" id="hdr" tabindex="0" role="button" aria-label="AgentDeck summary, activate to expand">
+        <span class="dot" id="dot"></span><span class="pilltxt" id="pilltxt"></span>
+        <span class="ibtns" id="ibtns"></span>
+      </div>
+      <div id="body" hidden></div>
+    </div>
+    <div class="notif" id="notif" hidden role="status"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <p class="foot">Mockup: simulated data, no real sessions</p>
+</div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const MARGIN = 16, TOP = 36, MIN = 60000;
+const FAKE = { bearer: 'Bearer FAKEtoken0123456789abcdef', sk: 'sk-FAKE0000000000000000', aws: 'AKIAFAKEFAKE00000000' };
+let uid = 0;
+
+const h = (t, a = {}, ...c) => {
+  const e = document.createElement(t);
+  for (const [k, v] of Object.entries(a)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const x of c.flat()) if (x != null && x !== false) e.append(x);
+  return e;
+};
+const btn = (txt, k, on, cls = '', extra = {}) => h('button', { type: 'button', class: 'btn ' + cls, 'data-k': k, onclick: on, ...extra }, txt);
+
+/* ---------- data ---------- */
+const now = () => Date.now();
+const sessions = [
+  { id: 's1', name: 'api-server', title: 'Fix S3 pool leak', model: 'Opus', since: now() - 4 * MIN, state: 'working' },
+  { id: 's2', name: 'web-portal', title: 'Activity tooltip', model: 'Sonnet', since: now() - 12 * MIN, state: 'working',
+    progress: [4, 7], step: 'Edit ActivityLog.tsx +18 −2', stepSince: now() - 41000, subs: ['code-reviewer', 'tests'] },
+  { id: 's3', name: 'reporting', title: 'Optimise report query', model: 'Sonnet', since: now() - 31 * MIN, state: 'yourTurn',
+    summary: 'Added compound index; query 4.1s → 180ms. All tests pass.' },
+  { id: 's4', name: 'mobile-sdk', title: 'Retry backoff', model: 'Haiku', since: now() - 22 * MIN, state: 'idle' },
+];
+const sess = id => sessions.find(s => s.id === id);
+
+const SAMPLES = [
+  () => ({ sid: 's2', kind: 'perm', tool: 'Edit', arg: 'src/components/ActivityLog.tsx', risk: 'low', reason: 'Edit inside the project directory',
+    rule: 'Edit(src/components/*)',
+    diff: ['  const rows = events;', '- const total = rows.length;', '+ const visible = rows.filter(r => !r.hidden);', '+ const total = visible.length;', '  return <List rows={visible} />;', '+ // tooltip copy lives in strings.ts'],
+    input: { file_path: 'src/components/ActivityLog.tsx', old_string: 'const total = rows.length;', new_string: 'const visible = rows.filter(r => !r.hidden);\nconst total = visible.length;' } }),
+  () => ({ sid: 's4', kind: 'perm', tool: 'Bash', arg: 'git push --force origin feature/sdk-retry', risk: 'high', reason: 'git push --force rewrites remote history',
+    input: { command: 'git push --force origin feature/sdk-retry', description: 'Publish rebased branch' } }),
+  () => ({ sid: 's3', kind: 'perm', tool: 'Edit', arg: '.env.production', risk: 'high', reason: 'Protected path (.env*): only you can approve', personOnly: true,
+    input: { file_path: '.env.production', old_string: 'LOG_LEVEL=info', new_string: 'LOG_LEVEL=debug' } }),
+  () => ({ sid: 's1', kind: 'perm', tool: 'WebFetch', arg: 'https://api.example.com/v1/status', risk: 'med', reason: 'Network fetch to an external host',
+    rule: 'WebFetch(domain:api.example.com)',
+    input: { url: 'https://api.example.com/v1/status', headers: { 'x-api-key': FAKE.sk }, prompt: 'Summarise service status' } }),
+];
+const QUESTIONS = [
+  () => ({ sid: 's2', kind: 'question', tool: 'AskUserQuestion', q: 'Which migration strategy should I use?', multi: false,
+    opts: ['Backfill in place', 'Dual write, then cut over', 'Recreate the table'] }),
+  () => ({ sid: 's1', kind: 'question', tool: 'AskUserQuestion', q: 'Which test suites should I run?', multi: true,
+    opts: ['Unit', 'Integration', 'End-to-end', 'Lint'] }),
+];
+const mk = b => ({ id: 'r' + (++uid), t0: now(), bonus: 0, ui: { sel: [], other: '' }, ...b });
+
+const queue = [mk({
+  sid: 's1', kind: 'perm', tool: 'Bash', arg: 'npm run test:e2e', risk: 'med', reason: 'Runs a project script (executes repo code)',
+  rule: 'Bash(npm run test:*)',
+  input: { command: 'npm run test:e2e', description: 'Run the e2e suite against staging', env: { AUTH_HEADER: FAKE.bearer, AWS_ACCESS_KEY_ID: FAKE.aws } },
+})];
+
+/* ---------- state ---------- */
+let expanded = false, pinned = false, privacy = false, view = 'card', hovering = false;
+let turnCard = null, turnTimer = 0, shownRid = null, notifReq = null;
+let armKey = null, armed = false, armTimer = 0;
+let intentTimer = 0, collapseTimer = 0, sampleI = 0, qI = 0;
+
+const stateOf = s => {
+  const r = queue.find(q => q.sid === s.id);
+  if (r) return r.released ? 'waitingInCursor' : 'needsYou';
+  return s.waiting ? 'waitingInCursor' : s.state;
+};
+const pending = () => queue.some(r => !r.released) || !!turnCard;
+const age = r => (now() - r.t0) / 1000 + r.bonus;
+const fmtMin = ms => { const m = Math.floor(ms / MIN); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : Math.max(m, 0) + 'm'; };
+const fmtClock = sec => Math.floor(sec / 60) + ':' + String(Math.floor(sec % 60)).padStart(2, '0');
+const TOOLNAME = { needsYou: 'needs you', working: 'working', yourTurn: 'your turn', waitingInCursor: 'waiting in Cursor', error: 'error' };
+
+/* ---------- toast ---------- */
+let toastT = 0;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+/* ---------- masking ---------- */
+const TOK = /(Bearer\s+[A-Za-z0-9._~+\/=-]{8,}|sk-[A-Za-z0-9_-]{8,}|AKIA[0-9A-Z]{8,})/g;
+function maskNodes(text) {
+  return String(text).split(TOK).map((part, i) => {
+    if (i % 2 === 0) return part;
+    const b = h('button', { type: 'button', class: 'mask', 'aria-label': 'Masked token, activate to reveal' }, '••••••••');
+    let shown = false;
+    b.addEventListener('click', () => {
+      shown = !shown; b.textContent = shown ? part : '••••••••';
+      b.setAttribute('aria-label', shown ? 'Revealed token, activate to hide' : 'Masked token, activate to reveal');
+    });
+    return b;
+  });
+}
+
+/* ---------- render ---------- */
+function summary() {
+  const c = { needsYou: 0, working: 0, yourTurn: 0, waitingInCursor: 0, error: 0 };
+  for (const s of sessions) { const st = stateOf(s); if (st in c) c[st]++; }
+  const parts = [sessions.length + ' agents'];
+  for (const k of ['needsYou', 'working', 'yourTurn', 'waitingInCursor', 'error']) if (c[k]) parts.push(c[k] + ' ' + TOOLNAME[k]);
+  const dot = c.error ? 'error' : c.needsYou ? 'needsYou' : c.yourTurn ? 'yourTurn' : c.working ? 'working' : 'idle';
+  return { text: parts.join(' · '), dot };
+}
+
+function renderPill() {
+  const { text, dot } = summary();
+  $('#pilltxt').textContent = text;
+  $('#dot').className = 'dot ' + dot;
+  $('#hdr').setAttribute('aria-label', 'AgentDeck: ' + text + (expanded ? '' : ', activate to expand'));
+  const ib = $('#ibtns'); ib.replaceChildren();
+  if (!expanded) return;
+  const hasCard = queue.length || turnCard;
+  ib.append(
+    btn('Pin', 'pin', () => { pinned = !pinned; render(); }, '', { 'aria-pressed': String(pinned), 'aria-label': 'Pin card open' }),
+    hasCard && !privacy ? btn(view === 'card' ? 'Sessions' : 'Card', 'view', () => { view = view === 'card' ? 'list' : 'card'; render(); }, '', { 'aria-label': 'Switch between card and session list' }) : null,
+    btn('−', 'min', () => setExpanded(false), '', { 'aria-label': 'Collapse' }),
+  );
+}
+
+function renderBody() {
+  const b = $('#body'); b.replaceChildren(); shownRid = null;
+  b.hidden = !expanded;
+  if (!expanded) return;
+  const top = queue[0];
+  if (privacy) b.append(privList());
+  else if (view === 'card' && top) { shownRid = top.id; b.append(top.kind === 'question' ? questionCard(top) : actionCard(top)); }
+  else if (view === 'card' && turnCard) b.append(turnEl());
+  else b.append(listEl());
+}
+
+function render() {
+  const fk = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.k : null;
+  const card = $('#card');
+  card.classList.toggle('expanded', expanded); card.classList.toggle('collapsed', !expanded);
+  renderPill(); renderBody(); renderNotif(); syncArm();
+  if (fk) { const el = card.querySelector('[data-k="' + fk + '"]'); if (el) el.focus(); }
+  place(false);
+}
+
+function privList() {
+  const w = h('div');
+  sessions.forEach((s, i) => {
+    const st = stateOf(s), r = queue.find(q => q.sid === s.id);
+    const t = st === 'needsYou' ? 'needs approval · ' + r.tool : st === 'waitingInCursor' ? 'waiting in Cursor' : TOOLNAME[st] || st;
+    w.append(h('div', { class: 'row' }, h('div', { class: 'line' }, h('span', { class: 'dot ' + st }), h('span', { class: 'name' }, 'Session ' + (i + 1) + ' ' + t))));
+  });
+  w.append(h('div', { class: 'small', style: 'padding-top:6px' }, 'Privacy mode: goals, commands and diffs hidden. Hotkeys only expand; nothing can be decided here.'));
+  return w;
+}
+
+function listEl() {
+  const w = h('div');
+  for (const s of sessions) {
+    const st = stateOf(s), r = queue.find(q => q.sid === s.id);
+    const head = h('div', { class: 'line' },
+      h('span', { class: 'dot ' + st }), h('span', { class: 'name' }, s.name), h('span', { class: 'ttl' }, '“' + s.title + '”'),
+      h('span', { class: 'chip ' + st }, TOOLNAME[st] || st),
+      h('span', { class: 'meta', 'data-since': s.since }, s.model + ' · ' + fmtMin(now() - s.since)));
+    const row = h('div', { class: 'row' }, head);
+    if (st === 'needsYou') row.append(h('div', { class: 'small' }, 'Wants to run ' + r.tool + ' ', ...maskNodes(r.arg), ' [' + r.risk + ']'));
+    if (st === 'waitingInCursor') row.append(h('div', { class: 'small' }, 'Waiting in Cursor ↗ (released; the native prompt is there)'));
+    if (st === 'working' && s.progress) {
+      const [a, n] = s.progress;
+      row.append(
+        h('div', { class: 'line' },
+          h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(n), 'aria-valuenow': String(a), 'aria-label': 'Plan progress' }, h('span', { style: 'width:' + (a / n * 100) + '%' })),
+          h('span', { class: 'small' }, a + '/' + n), h('span', { class: 'small' }, s.step), h('span', { class: 'meta', 'data-clock': s.stepSince }, fmtClock((now() - s.stepSince) / 1000))),
+        h('div', { class: 'subs' }, h('span', { class: 'small' }, s.subs.length + ' subagents'), s.subs.map(n2 => h('span', null, '└ ' + n2 + ' ', h('span', { class: 'chip working' }, 'working')))));
+    }
+    if (st === 'yourTurn') row.append(h('div', { class: 'small' }, '“' + s.summary + '”'),
+      h('div', { class: 'acts' }, btn('Open ↗', 'open-' + s.id, () => toast('Open in Cursor (simulated): ' + s.name)), btn('Dismiss', 'dis-' + s.id, () => { s.state = 'idle'; s.since = now(); render(); })));
+    if (st === 'idle') row.append(h('div', { class: 'small' }, 'idle ' + fmtMin(now() - s.since)));
+    w.append(row);
+  }
+  return w;
+}
+
+function turnEl() {
+  const s = sess(turnCard.sid);
+  return h('div', { class: 'req', 'data-rid': turnCard.id },
+    h('div', { class: 'reqhead' }, h('b', null, '✓ Done'), h('span', { class: 'small' }, s.name + ' · ' + s.model + ' · folds into the list in ' + turnCard.left + ' s')),
+    h('div', null, s.summary),
+    h('div', { class: 'acts' }, btn('Open ↗', 'tOpen', () => toast('Open in Cursor (simulated): ' + s.name)), btn('Dismiss', 'tDis', () => { s.state = 'idle'; s.since = now(); clearTurn(); render(); })));
+}
+
+function actionCard(r) {
+  const s = sess(r.sid), ui = r.ui, rid = r.id, high = r.risk === 'high';
+  const el = h('div', { class: 'req', 'data-rid': rid });
+  el.append(h('div', { class: 'reqhead' },
+    h('span', null, h('b', null, s.name), ' ', h('span', { class: 'ttl small' }, '“' + s.title + '”')),
+    h('span', { class: 'small', 'data-since': s.since }, s.model + ' · ' + fmtMin(now() - s.since))),
+    h('div', { class: 'qn' }, '1 of ' + queue.length + ' · oldest first'));
+  const wants = h('div', { class: 'wants' }, h('div', null, 'Wants to run ', h('b', null, r.tool), ' ', h('code', null, ...maskNodes(r.arg))));
+  if (r.diff) {
+    const add = r.diff.filter(l => l[0] === '+').length, del = r.diff.filter(l => l[0] === '-').length;
+    wants.append(h('div', { class: 'small' }, '+' + add + ' −' + del),
+      h('div', { class: 'q diff', 'aria-label': 'Diff preview' }, r.diff.map(l => h('div', { class: l[0] === '+' ? 'a' : l[0] === '-' ? 'd' : '' }, l))));
+  }
+  el.append(wants);
+  el.append(h('button', { type: 'button', class: 'risk', 'data-k': 'risk', 'aria-expanded': String(!!ui.open), onclick: () => { ui.open = !ui.open; render(); } },
+    h('span', { class: 'rb ' + r.risk }, r.risk.toUpperCase()), h('span', null, r.reason), h('span', { style: 'margin-left:auto' }, ui.open ? '▴' : '▾')));
+  if (ui.open) {
+    let lines = JSON.stringify(r.input, null, 2).split('\n');
+    if (lines.length > 20) lines = lines.slice(0, 20).concat('… (' + (lines.length - 20) + ' more lines hidden)');
+    el.append(h('pre', { class: 'full', tabindex: '0', 'aria-label': 'Full tool input' }, lines.map(l => [maskNodes(l), '\n'])));
+  }
+
+  if (r.released) {
+    el.append(h('div', { class: 'banner' }, 'Released to Cursor ↗. Waiting in Cursor: the native prompt there is live. AgentDeck no longer holds this request.'),
+      h('div', { class: 'acts' }, btn('Open in Cursor ↗', 'open', () => openCursor(r)), btn('Dismiss', 'relDis', () => { guard(rid); const t = queue.indexOf(r); if (t >= 0) { queue.splice(t, 1); sess(r.sid).waiting = true; render(); } })));
+    return el;
+  }
+  const acts = h('div', { class: 'acts' });
+  if (r.personOnly) {
+    el.append(h('div', { class: 'small' }, 'Person-only request: an allow from here would be ignored, so only Deny and Approve in Cursor are offered.'));
+    acts.append(btn('Deny ⌃⌥N', 'deny', () => doDeny(rid), 'danger', { 'data-rid': rid }), btn('Approve in Cursor ↗', 'appr', () => openCursor(r), '', { 'data-rid': rid }));
+    el.append(acts); return el;
+  }
+  const allow = btn(h('span', null, high ? 'Hold to allow' : 'Allow ⌃⌥Y', h('span', { class: 'arm' }, 'arming…')), 'allow', () => { if (!high) doAllow(rid); }, 'primary' + (high ? ' hold' : ''),
+    { 'data-rid': rid, 'data-gate': '1', 'aria-label': high ? 'Allow, press and hold for one second. Hotkey disabled for high risk' : 'Allow, shortcut Control Option Y' });
+  if (high) wireHold(allow, rid);
+  acts.append(allow);
+  if (r.rule) acts.append(btn('Allow always…', 'always', () => { ui.always = !ui.always; render(); }, '', { 'aria-expanded': String(!!ui.always) }));
+  acts.append(btn('Deny ⌃⌥N', 'deny', () => doDeny(rid), 'danger', { 'data-rid': rid }),
+    btn('Deny + note…', 'note', () => { ui.note = !ui.note; render(); if (ui.note) { const i = $('#noteIn'); if (i) i.focus(); } }, '', { 'aria-expanded': String(!!ui.note) }),
+    btn('Open in Cursor ↗', 'open', () => openCursor(r)));
+  el.append(acts);
+  if (ui.always && r.rule) el.append(h('div', { class: 'inl' }, h('span', { class: 'small' }, 'Rule for this project:'), h('code', null, r.rule),
+    btn(h('span', null, 'Add rule and allow', h('span', { class: 'arm' }, 'arming…')), 'alwaysOk', () => doAllow(rid, r.rule), 'primary', { 'data-rid': rid, 'data-gate': '1' }),
+    btn('Cancel', 'alwaysNo', () => { ui.always = false; render(); })));
+  if (ui.note) el.append(h('div', { class: 'inl' },
+    h('input', { type: 'text', id: 'noteIn', 'aria-label': 'Note sent to Claude as the deny message', placeholder: 'Tell Claude why or what to do instead', value: ui.noteText || '',
+      oninput: e => { ui.noteText = e.target.value; }, onkeydown: e => { if (e.key === 'Enter') doDeny(rid, ui.noteText); } }),
+    btn('Send deny', 'noteGo', () => doDeny(rid, ui.noteText), 'danger', { 'data-rid': rid })));
+  return el;
+}
+
+function questionCard(r) {
+  const s = sess(r.sid), ui = r.ui, rid = r.id;
+  const el = h('div', { class: 'req', 'data-rid': rid });
+  el.append(h('div', { class: 'reqhead' }, h('span', null, h('b', null, s.name), ' ', h('span', { class: 'small' }, 'asks')), h('span', { class: 'small' }, s.model + ' · ' + fmtMin(now() - s.since))),
+    h('div', { class: 'qn' }, '1 of ' + queue.length + ' · oldest first'), h('div', null, h('b', null, r.q)));
+  const opts = h('div', { class: 'opts', role: r.multi ? 'group' : 'radiogroup', 'aria-label': r.q });
+  r.opts.forEach((o, i) => {
+    const on = ui.sel.includes(i);
+    const pick = () => { ui.sel = r.multi ? (on ? ui.sel.filter(x => x !== i) : ui.sel.concat(i)) : [i]; render(); };
+    if (r.multi) opts.append(h('label', null, h('input', { type: 'checkbox', 'data-k': 'o' + i, checked: on, onchange: pick }), o));
+    else opts.append(btn(o, 'o' + i, pick, '', { 'aria-pressed': String(on), role: 'radio', 'aria-checked': String(on) }));
+  });
+  el.append(opts, h('div', { class: 'inl' }, h('input', { type: 'text', 'aria-label': 'Other answer', placeholder: 'Other…', value: ui.other, oninput: e => { ui.other = e.target.value; } })));
+  el.append(h('div', { class: 'acts' },
+    btn(h('span', null, 'Submit', h('span', { class: 'arm' }, 'arming…')), 'submit', () => {
+      if (!armed) return toast('Arming: card must be fully visible for 600 ms');
+      const t = guard(rid); if (!t) return;
+      const ans = ui.sel.map(i => r.opts[i]).concat(ui.other.trim() ? [ui.other.trim()] : []);
+      if (!ans.length) return toast('Pick an option or type an answer first');
+      finish(r, 'Answer sent: ' + ans.join(', '));
+    }, 'primary', { 'data-rid': rid, 'data-gate': '1' }),
+    btn('Answer in Cursor ↗', 'open', () => openCursor(r))));
+  return el;
+}
+
+/* ---------- decisions ---------- */
+function guard(rid) {
+  const t = queue[0];
+  if (!t || t.id !== rid) { toast('Stale action dropped: that request is no longer on screen'); render(); return null; }
+  return t;
+}
+function finish(r, msg) {
+  const i = queue.indexOf(r); if (i < 0) return;
+  queue.splice(i, 1);
+  toast(privacy ? 'Decision sent' : msg);
+  render(); scheduleCollapse();
+}
+function doAllow(rid, rule) {
+  const r = guard(rid); if (!r) return;
+  if (!armed) return toast('Arming: card must be fully visible for 600 ms');
+  finish(r, (rule ? 'Rule added: ' + rule + '; ' : '') + 'Allowed ' + r.tool + ' (' + sess(r.sid).name + ')');
+}
+function doDeny(rid, note) {
+  const r = guard(rid); if (!r) return;
+  finish(r, 'Denied ' + r.tool + (note && note.trim() ? ' with note: ' + note.trim() : '') + ' (' + sess(r.sid).name + ')');
+}
+function openCursor(r) {
+  const i = r ? sessions.indexOf(sess(r.sid)) : -1;
+  toast(!r ? 'Open in Cursor (simulated): nothing pending' : privacy ? 'Open in Cursor (simulated): Session ' + (i + 1) : 'Open in Cursor (simulated): ' + sess(r.sid).name);
+}
+
+/* press-and-hold, 1 s, for high-risk Allow */
+function wireHold(b, rid) {
+  let raf = 0, t0 = 0;
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; b.style.setProperty('--p', 0); };
+  const step = () => {
+    const p = Math.min(1, (performance.now() - t0) / 1000);
+    b.style.setProperty('--p', p);
+    if (p >= 1) { stop(); doAllow(rid); } else raf = requestAnimationFrame(step);
+  };
+  const start = () => {
+    if (raf) return;
+    if (!armed) return toast('Arming: card must be fully visible for 600 ms');
+    t0 = performance.now(); raf = requestAnimationFrame(step);
+  };
+  b.addEventListener('pointerdown', e => { if (e.button === 0) start(); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel', 'blur']) b.addEventListener(ev, stop);
+  b.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); start(); } });
+  b.addEventListener('keyup', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stop(); } });
+}
+
+/* ---------- arming: Allow arms 600 ms after the top card is fully visible ---------- */
+function applyArmed() {
+  document.querySelectorAll('[data-gate]').forEach(b => { b.classList.toggle('disarmed', !armed); b.setAttribute('aria-disabled', String(!armed)); });
+}
+function syncArm() {
+  const top = queue[0];
+  const key = expanded && !privacy && view === 'card' && top && !top.released ? top.id : null;
+  if (key !== armKey) {
+    armKey = key; armed = false; clearTimeout(armTimer);
+    if (key) armTimer = setTimeout(() => { armed = true; applyArmed(); }, 600);
+  }
+  applyArmed();
+}
+
+/* ---------- expand / collapse ---------- */
+function setExpanded(v) {
+  clearTimeout(intentTimer); clearTimeout(collapseTimer);
+  expanded = v; render();
+}
+function scheduleCollapse() {
+  clearTimeout(collapseTimer);
+  if (hovering) return;
+  collapseTimer = setTimeout(() => { if (!pinned && !pending() && !hovering) setExpanded(false); }, 1200);
+}
+function addRequest(b) {
+  const r = mk(b); const wasEmpty = queue.length === 0;
+  queue.push(r);                       // joins the queue; never replaces the card on screen
+  clearTurn();
+  if (wasEmpty || !expanded) view = 'card';
+  if (!expanded) { expanded = true; }
+  const c = $('#card'); c.classList.remove('glow'); void c.offsetWidth; c.classList.add('glow');
+  render(); toast(queue.length > 1 ? 'New request queued (' + queue.length + ' waiting)' : 'New request');
+}
+function clearTurn() { clearInterval(turnTimer); turnCard = null; }
+function startTurn() {
+  const s = sess('s3'); s.state = 'yourTurn';
+  clearTurn(); turnCard = { id: 'turn' + (++uid), sid: 's3', left: 10 };
+  if (!queue.length) { view = 'card'; expanded = true; }
+  turnTimer = setInterval(() => {
+    if (!turnCard) return clearInterval(turnTimer);
+    if (--turnCard.left <= 0) { clearTurn(); render(); scheduleCollapse(); } else render();
+  }, 1000);
+  render();
+}
+
+/* ---------- attention ladder (simulated clock) ---------- */
+function release(r) { r.released = true; toast('Released to Cursor: waiting in Cursor'); view = 'card'; render(); }
+function evalLadder() {
+  let pulse = false;
+  for (const r of queue.slice()) {
+    if (r.released) continue;
+    const a = age(r);
+    if (a >= 590) { release(r); continue; }
+    if (a >= 90 && !r.notified) { r.notified = true; notifReq = r; renderNotif(); }
+    if (a >= 30) pulse = true;
+  }
+  $('#card').classList.toggle('pulse', pulse);
+}
+function renderNotif() {
+  const n = $('#notif');
+  if (notifReq && (!queue.includes(notifReq) || notifReq.released)) notifReq = null;
+  n.hidden = !notifReq; n.replaceChildren();
+  if (!notifReq) return;
+  const r = notifReq, i = sessions.indexOf(sess(r.sid));
+  n.append(h('b', null, 'AgentDeck (mock macOS notification)'),
+    h('div', null, privacy ? 'Session ' + (i + 1) + ' needs approval' : sess(r.sid).name + ' needs approval: ' + r.tool + ' ' + r.arg.slice(0, 40) + (r.arg.length > 40 ? '…' : '')),
+    h('div', { class: 'small' }, 'Deny and Show only. Allow is never offered here: notifications persist on the lock screen.'),
+    h('div', { class: 'acts' },
+      btn('Deny', 'nDeny', () => { const q = r; notifReq = null; if (queue.includes(q)) { queue.splice(queue.indexOf(q), 1); toast('Denied from notification'); render(); scheduleCollapse(); } }, 'danger'),
+      btn('Show', 'nShow', () => { notifReq = null; view = 'card'; setExpanded(true); })));
+}
+function ladderJump(sec) {
+  const r = queue.find(q => !q.released);
+  if (!r) return toast('No pending request to age: simulate one first');
+  r.bonus = Math.max(r.bonus, sec - (now() - r.t0) / 1000);
+  evalLadder(); render();
+}
+
+/* ---------- hotkeys ---------- */
+function hotkey(code) {
+  if (code === 'Space') { setExpanded(!expanded); return; }
+  if (code === 'KeyH') { setPrivacy(!privacy); return; }
+  if (code === 'KeyO') { openCursor(queue[0] || null); return; }
+  if (!expanded) { setExpanded(true); toast('Expanded only. Nothing was decided.'); return; }
+  if (privacy) { toast('Privacy mode: hotkeys only expand, nothing was decided'); return; }
+  const r = queue[0];
+  if (!r) { toast('Nothing pending'); return; }
+  if (!shownRid) { view = 'card'; render(); toast('Showing the card. Nothing was decided.'); return; }
+  if (r.released) return toast('Released to Cursor: decide there');
+  if (r.kind === 'question') return toast('Answer the question with the card (Submit)');
+  if (code === 'KeyN') return doDeny(shownRid);
+  if (r.personOnly) return toast('Person-only request: approve in Cursor');
+  if (r.risk === 'high') return toast('Hotkey approval is disabled for high risk: press and hold Allow');
+  if (!armed) return toast('Arming: card must be fully visible for 600 ms');
+  doAllow(shownRid);
+}
+document.addEventListener('keydown', e => {
+  if (!(e.ctrlKey && e.altKey) || e.metaKey || e.shiftKey) return;
+  if (!['Space', 'KeyY', 'KeyN', 'KeyO', 'KeyH'].includes(e.code)) return;
+  e.preventDefault(); hotkey(e.code);
+});
+
+/* ---------- privacy and theme ---------- */
+function setPrivacy(v) {
+  privacy = v; $('#tPriv').setAttribute('aria-pressed', String(v)); $('#tPriv').textContent = 'Privacy mode: ' + (v ? 'on' : 'off');
+  render(); toast(v ? 'Privacy mode on: only states and counts' : 'Privacy mode off');
+}
+const THEMES = ['auto', 'light', 'dark']; let themeI = 0;
+$('#tTheme').addEventListener('click', e => {
+  themeI = (themeI + 1) % 3; const t = THEMES[themeI];
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+  e.currentTarget.textContent = 'Theme: ' + t;
+});
+
+/* ---------- dragging and corner snap ---------- */
+const card = $('#card'), stage = $('#stage');
+const pos = { corner: 'tr', x: 0, y: 0 };
+const NODRAG = 'button,input,textarea,select,a,label,pre,[data-nodrag]';
+function anchors() {
+  const sw = stage.clientWidth, sh = stage.clientHeight, w = card.offsetWidth, h2 = card.offsetHeight;
+  return { tl: [MARGIN, TOP], tr: [sw - w - MARGIN, TOP], bl: [MARGIN, sh - h2 - MARGIN], br: [sw - w - MARGIN, sh - h2 - MARGIN] };
+}
+function place(animate) {
+  const sw = stage.clientWidth, sh = stage.clientHeight, w = card.offsetWidth, h2 = card.offsetHeight;
+  let [x, y] = pos.corner ? anchors()[pos.corner] : [pos.x, pos.y];
+  x = Math.min(Math.max(0, x), Math.max(0, sw - w)); y = Math.min(Math.max(0, y), Math.max(0, sh - h2));
+  if (animate) { card.classList.add('snap'); setTimeout(() => card.classList.remove('snap'), 300); }
+  card.style.left = x + 'px'; card.style.top = y + 'px';
+}
+let drag = null, suppressClick = false;
+card.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || e.target.closest(NODRAG)) return;
+  drag = { px: e.clientX, py: e.clientY, ox: card.offsetLeft, oy: card.offsetTop, moved: false, id: e.pointerId };
+  card.setPointerCapture(e.pointerId);
+});
+card.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.px, dy = e.clientY - drag.py;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  drag.moved = true; card.classList.add('dragging');
+  pos.corner = null; pos.x = drag.ox + dx; pos.y = drag.oy + dy; place(false);
+});
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null; card.classList.remove('dragging');
+  if (!d.moved) return;
+  suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
+  const a = anchors(); let best = null, bd = 41;
+  for (const [k, [ax, ay]] of Object.entries(a)) { const dist = Math.hypot(card.offsetLeft - ax, card.offsetTop - ay); if (dist <= bd) { bd = dist; best = k; } }
+  if (best) { pos.corner = best; place(true); } else { pos.x = card.offsetLeft; pos.y = card.offsetTop; }
+  scheduleCollapse();
+}
+card.addEventListener('pointerup', endDrag);
+card.addEventListener('pointercancel', endDrag);
+new ResizeObserver(() => place(false)).observe(card);
+addEventListener('resize', () => place(false));
+
+/* ---------- hover intent and header ---------- */
+card.addEventListener('pointerenter', e => {
+  if (e.pointerType === 'touch') return;
+  hovering = true; clearTimeout(collapseTimer);
+  if (!expanded) { clearTimeout(intentTimer); intentTimer = setTimeout(() => { if (hovering && !expanded) setExpanded(true); }, 300); }
+});
+card.addEventListener('pointerleave', () => { hovering = false; clearTimeout(intentTimer); if (expanded) scheduleCollapse(); });
+const hdr = $('#hdr');
+hdr.addEventListener('click', e => { if (suppressClick || e.target.closest('button')) return; if (!expanded) setExpanded(true); });
+hdr.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === hdr) { e.preventDefault(); setExpanded(!expanded); } });
+
+/* ---------- controls ---------- */
+$('#simReq').addEventListener('click', () => addRequest(SAMPLES[sampleI++ % SAMPLES.length]()));
+$('#simQ').addEventListener('click', () => addRequest(QUESTIONS[qI++ % QUESTIONS.length]()));
+$('#simTurn').addEventListener('click', startTurn);
+$('#simElsewhere').addEventListener('click', () => {
+  const r = queue.shift(); if (!r) return toast('Nothing pending');
+  toast('Handled elsewhere: card dropped'); render(); scheduleCollapse();
+});
+document.querySelectorAll('[data-ladder]').forEach(b => b.addEventListener('click', () => ladderJump(+b.dataset.ladder)));
+$('#tPriv').addEventListener('click', () => setPrivacy(!privacy));
+
+/* ---------- clock tick: no re-render, so focus and holds survive ---------- */
+setInterval(() => {
+  document.querySelectorAll('[data-since]').forEach(el => { const s = sessions.find(x => String(x.since) === el.dataset.since); if (s) el.textContent = s.model + ' · ' + fmtMin(now() - s.since); });
+  document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = fmtClock((now() - +el.dataset.clock) / 1000); });
+  const r = queue.find(q => !q.released);
+  $('#age').textContent = 'Top request waited: ' + (r ? fmtClock(age(r)) : '0:00') + ' (simulated clock)';
+  evalLadder();
+}, 500);
+
+render(); place(false);
+</script>
+</body>
+</html>

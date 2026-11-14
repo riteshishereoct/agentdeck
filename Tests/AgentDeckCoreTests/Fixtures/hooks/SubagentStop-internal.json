@@ -1,0 +1,10 @@
+{
+  "session_id": "s-1111",
+  "transcript_path": "/tmp/adk-fixture/s-1111.jsonl",
+  "cwd": "/Users/me/proj",
+  "permission_mode": "default",
+  "hook_event_name": "SubagentStop",
+  "agent_id": "a-2",
+  "agent_type": "",
+  "last_assistant_message": ""
+}

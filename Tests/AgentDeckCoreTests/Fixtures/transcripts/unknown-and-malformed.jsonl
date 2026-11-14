@@ -1,0 +1,6 @@
+{"type":"queue-operation","operation":"enqueue"}
+not json at all
+
+{"type":"assistant"}
+{"type":"user","message":{"role":"user","content":"hello"}}
+[1,2]

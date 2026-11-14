@@ -1,0 +1,6 @@
+# Test fixtures for the secret-masking tests contain deliberately fake credentials.
+[extend]
+useDefault = true
+[[allowlists]]
+description = "fake credentials in masking tests"
+paths = ['''Tests/AgentDeckCoreTests/''', '''docs/mockups/''']

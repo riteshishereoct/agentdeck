@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "extensionVersion": "2.1.325",
+  "measuredAt": "2026-11-14; historical Claude Code 2.1.325 L1-L7 evidence: Bash allow/deny/race/concurrency and Question single/Other/multiselect; not per-host calibration",
+  "deepLink": "cursor://anthropic.claude-code/open?session={session}",
+  "categories": {
+    "Bash": 1,
+    "EditWrite": 3,
+    "Web": 3,
+    "MCP": 3,
+    "Question": 2,
+    "ExitPlanMode": 3,
+    "Other": 3
+  }
+}
