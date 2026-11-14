@@ -2,6 +2,8 @@
 
 A native macOS floating overlay that supervises your Claude Code sessions.
 
+**[Interactive guide and demo](https://riteshishereoct.github.io/agentdeck/)** · **[Download the preview](https://github.com/riteshishereoct/agentdeck/releases)**
+
 You started Claude Code in three projects. One is waiting for a yes. One asked a question ten minutes ago. One finished and nobody noticed. AgentDeck keeps every session in view and lets you answer from one card.
 
 **What.** A small overlay listing every Claude Code session across your Cursor windows and terminals: what each is doing now, what it is waiting for, and what it last finished.
