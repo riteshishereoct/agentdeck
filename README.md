@@ -78,7 +78,7 @@ installer/uninstall.sh
 
 ## Limitations
 
-> **Known gap: memory target not met.** Peak RSS 97.2 MiB vs a 60 MiB target. Root cause is macOS text-input framework residency (a bare SwiftUI `TextField` app peaks around 88 MiB RSS). No app leak found. Idle CPU is about 0.06% of one core over a 600 s sample.
+> **Known acceptance gap — FAIL.** The previous full warm-idle run peaked at 97.2 MiB RSS versus a 60 MiB target after text entry. Investigation found macOS text-input framework residency and no app-owned leak. The 0.1.1 binary has not had a new ten-minute native energy run, so its memory target remains unverified.
 
 - Not notarized yet; ad-hoc signed. macOS may block the first launch: for a copy you trust, review System Settings → Privacy & Security → Open Anyway.
 - Claude Code only. Other agents are not tracked.

@@ -280,7 +280,7 @@ The window is an NSPanel with `[.borderless, .nonactivatingPanel]`, level `.stat
 │ ◉ 4 agents · 1 needs you · 2 working │
 ╰──────────────────────────────────────╯
 ```
-Colors: grey = idle, blue = working, amber = needs you, green = your turn, red = error.
+Colors: grey = idle, blue = working, amber = needs you, green = ready for you, red = error.
 
 **Expanded list** (hover with a 300 ms intent delay, or click; collapses 1.2 s after the pointer leaves, unless pinned or something is pending):
 ```

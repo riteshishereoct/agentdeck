@@ -35,18 +35,10 @@ struct DeckView: View {
         .onChange(of: model.expanded) { _, _ in reportVisibility() }
     }
 
-    @ViewBuilder private var usageView: some View {
-        if let u = model.usage {
-            Text(u.text).font(.caption).foregroundStyle(.secondary).opacity(u.stale ? 0.5 : 1).lineLimit(1)
-                .accessibilityLabel(usageAccessibility(u.text))
-        }
-    }
-
     private func collapsedBody(_ pill: PillSummary) -> some View {
         HStack(spacing: 8) {
             AttentionDot(color: pill.color.color, pulsing: model.pulsing, glowing: model.glowing)
             Text(pill.text).font(.callout.weight(.medium)).lineLimit(1)
-            usageView
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
         .background(Capsule().fill(.regularMaterial))
@@ -103,7 +95,6 @@ struct DeckView: View {
             HStack(spacing: 8) {
                 AttentionDot(color: pill.color.color, pulsing: model.pulsing, glowing: model.glowing)
                 Text(pill.text).font(.headline).lineLimit(1)
-                usageView
                 Spacer(minLength: 0)
             }
             .contentShape(Rectangle())

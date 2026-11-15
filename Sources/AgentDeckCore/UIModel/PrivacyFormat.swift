@@ -8,7 +8,7 @@ public enum PrivacyFormat {
         }
         let state: String
         switch session.state {
-        case .yourTurn: state = "your turn"
+        case .yourTurn: state = "ready for you"
         case .waitingInCursor: state = "waiting in Cursor ↗"
         case .needsYou: state = "needs you"
         default: state = session.state.rawValue

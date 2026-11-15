@@ -125,7 +125,7 @@ final class PrivacyTests: XCTestCase {
         let s = UI.session(project: "secret-proj", state: .needsYou, title: "secret-title", summary: "secret-summary", pending: [UI.request("A", tool: "mcp__db__query", preview: "secret command")])
         XCTAssertEqual(PrivacyFormat.row(index: 2, session: s), "Session 2 needs approval · db.query")
         XCTAssertEqual(PrivacyFormat.pill([s]), "1 needs you")
-        XCTAssertEqual(PrivacyFormat.row(index: 1, session: UI.session(state: .yourTurn)), "Session 1 your turn")
+        XCTAssertEqual(PrivacyFormat.row(index: 1, session: UI.session(state: .yourTurn)), "Session 1 ready for you")
         let resolved = UI.session(state: .working, pending: [UI.request("A", status: .handledElsewhere)])
         XCTAssertEqual(PrivacyFormat.row(index: 3, session: resolved), "Session 3 working")
     }

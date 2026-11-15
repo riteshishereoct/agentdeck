@@ -10,9 +10,6 @@ final class DeckModel: ObservableObject {
     var snapshot: PresenceSnapshot? {
         didSet { if mutedIds(using: oldValue) != mutedIds { tick() } }
     }
-    @Published var usage: (text: String, stale: Bool)?
-    private var usageSnapshot: UsageSnapshot?
-    private var usageWatcher: UsageWatcher?
     @Published var expanded = false
     @Published var cardNotice: (id: String, text: String)?   // inline drop reason, auto-clears (one-shot)
     private var cardNoticeWork: DispatchWorkItem?
@@ -90,8 +87,6 @@ final class DeckModel: ObservableObject {
             guard let self, self.sessions != sessions else { return }
             self.sessions = sessions; self.tick()
         }
-        usageWatcher = UsageWatcher { [weak self] in self?.usageSnapshot = $0; self?.refreshUsage() }
-        usageWatcher?.start()
     }
 
     func openSetupHelp() {
@@ -112,9 +107,6 @@ final class DeckModel: ObservableObject {
                 : self.daemon.hookRepairError ?? "Hook installation failed. Check your Claude settings and use Setup & Help for recovery."
         }
     }
-
-    /// Re-evaluates staleness against the clock; called on file change and from show(), never from a timer.
-    func refreshUsage() { usage = usageLabel(usageSnapshot, now: Date()) }
 
     deinit { timer?.invalidate() }
 

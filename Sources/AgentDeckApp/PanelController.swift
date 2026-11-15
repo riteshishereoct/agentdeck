@@ -44,7 +44,7 @@ final class PanelController {
     }
 
     /// Never makeKey / activate: anti-goal 1.
-    func show() { model.panelVisible = true; model.refreshUsage(); refit(); panel.orderFrontRegardless() }
+    func show() { model.panelVisible = true; refit(); panel.orderFrontRegardless() }
 
     func hide() { model.panelVisible = false; panel.orderOut(nil) }
 

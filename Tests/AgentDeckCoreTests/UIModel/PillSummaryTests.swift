@@ -24,6 +24,6 @@ final class PillSummaryTests: XCTestCase {
         XCTAssertEqual(PillSummary.make([UI.session("1", state: .yourTurn), UI.session("2", state: .error)]).color, .red)
         XCTAssertEqual(PillSummary.make([UI.session("1", state: .working)]).color, .blue)
         XCTAssertEqual(PillSummary.make([UI.session("1", state: .error), UI.session("2", state: .yourTurn), UI.session("3", state: .working)]).text,
-                       "1 error · 1 your turn · 1 working")
+                       "1 error · 1 ready for you · 1 working")
     }
 }

@@ -13,7 +13,7 @@ public struct PillSummary: Equatable {
         guard !live.isEmpty else { return PillSummary(text: "No agents", color: .grey) }
         func n(_ s: SessionState) -> Int { live.filter { $0.state == s }.count }
         let idle = n(.idle) + n(.quiet)
-        let parts = [("needs you", n(.needsYou)), ("error", n(.error)), ("your turn", n(.yourTurn)), ("working", n(.working)),
+        let parts = [("needs you", n(.needsYou)), ("error", n(.error)), ("ready for you", n(.yourTurn)), ("working", n(.working)),
                      ("waiting in Cursor", n(.waitingInCursor))]
             .filter { $0.1 > 0 }.map { "\($0.1) \($0.0)" }
         guard !parts.isEmpty else { return PillSummary(text: "Idle · \(idle) session\(idle == 1 ? "" : "s")", color: .grey) }

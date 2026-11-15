@@ -66,7 +66,7 @@ public enum RowFormat {
         case .working: return "working"
         case .needsYou: return "needs you"
         case .waitingInCursor: return "waiting in Cursor ↗"
-        case .yourTurn: return "your turn"
+        case .yourTurn: return "ready for you"
         case .error: return "error"
         case .ended: return "ended"
         }
