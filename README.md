@@ -86,7 +86,7 @@ installer/uninstall.sh
 
 ## Limitations
 
-> **Known acceptance gap: memory target FAIL.** The 0.2.0 ten-minute native run peaked at **62.9 MiB RSS versus the 60 MiB target** (earlier builds: 78.6 and 97.2 MiB; physical footprint 36.0 MiB). Energy in that run averaged 0.228% of one core (0.093% quiet, 1.72% active); with the panel expanded and a request open it measured 2.8% of one core (27.9% before the animation fix). Tests: 476/476 on an XCTest shim runner (Command Line Tools only); a real-XCTest run is pending.
+> **Known acceptance gap: memory target FAIL.** The 0.2.0 ten-minute native run peaked at **62.9 MiB RSS versus the 60 MiB target** (earlier builds: 78.6 and 97.2 MiB; physical footprint 36.0 MiB). Energy in that run averaged 0.228% of one core (0.093% quiet, 1.72% active); with the panel expanded and a request open it measured 2.8% of one core (27.9% before the animation fix). Tests: 476/476 passed under real XCTest (Xcode, `swift test`, 0 failures).
 
 - Not notarized yet; ad-hoc signed. macOS may block the first launch: for a copy you trust, review System Settings → Privacy & Security → Open Anyway.
 - Claude Code only. Other agents are not tracked.
