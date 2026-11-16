@@ -16,6 +16,11 @@
 !/distribution/
 !/docs/
 !/tools/
+!/.claude/
+!/.claude/skills/
+!/.claude/skills/agentdeck-phone-approvals/
+!/addons/
+!/addons/phone-approvals/
 
 # Never publish these, even inside re-included directories
 build/
@@ -26,3 +31,5 @@ releases*/
 xcuserdata/
 __pycache__/
 *.pyc
+hook.log
+pending/

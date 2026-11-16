@@ -2,8 +2,8 @@
 
 Status: frozen 2026-11-13 for the Phase 1 + Phase 2 build plan. Source of truth for behavior is the spec,
 `docs/superpowers/specs/2026-11-13-agentdeck-design.md` (cited as §N / FN). This file freezes the
-interfaces between parts so each part codes against it, not against each other. A change here is a deliberate
-protocol revision; a gap is recorded as an open issue, never a silent variation.
+interfaces between parts so every coworker codes against it, not against each other. A change here needs
+the orchestrator; a coworker that finds a gap writes it as an open issue, never a silent variation.
 
 Where this file is stricter than the spec, the reason is given inline and tagged **[clarifies §N]**.
 
@@ -58,11 +58,30 @@ reading), whole request must arrive within 2 s of accept (else close). Header na
 | `POST /v1/event/<Hook>` | `SessionStart SessionEnd UserPromptSubmit PostToolUse PostToolUseFailure Notification Stop SubagentStart SubagentStop PreCompact PermissionDenied` | `204 No Content`, empty body, always (also on undecodable JSON or unknown `<Hook>`: ingest skipped, still 204). |
 | `POST /v1/gate/PreToolUse` | `PreToolUse` only | `200`, body = one step-1 verb (§2.3). Undecodable JSON → `PASS`. |
 | `POST /v1/decide/PermissionRequest` | `PermissionRequest` only | `200`, body = one step-1 verb. Undecodable JSON → `PASS`. |
+| `POST /v1/external/claim` | — | `200 {"claimed":true,"request_id":"…"}`, `404` no match, `409` ambiguous, `400` bad body. See §2.2.1. |
+| `POST /v1/external/resolve` | — | `200 {"resolved":true}`, `404` no match, `409` already resolved, `403` refused by a guard, `400` bad body. See §2.2.1. |
 | `GET /v1/wait/<id>` | — | `200` streaming (§2.4), or `404` for unknown/expired/already-attached id. |
 | anything else | — | `404`, `Content-Length: 0`. |
 
 Every gate/decide body is also ingested as an event (`.hook(.preToolUse)` / `.hook(.permissionRequest)`)
 before the verb is computed. Internal error while computing a verb → `500` (hook fails open via `--fail`).
+
+#### 2.2.1 `POST /v1/external/claim` + `resolve` (another approval channel won the race)
+
+Same transport as every endpoint (the AF_UNIX socket, §1; no extra auth). Before contacting the external
+channel, the client posts `{"session_id", "tool_name", "tool_input"}` to `claim`. The broker returns the
+unique pending held `PermissionRequest` as `request_id`; no match is `404` and more than one match is `409`.
+The client sends only that opaque id back to `resolve`:
+`{"request_id", "verdict": "allow"|"deny", "message"?: string, "source": "slack"}`. The broker then calls `resolve` with
+`DecisionSource.external(source)`. `allow` = allow-once, `deny` = deny with `message` as the deny message; no
+`updatedPermissions`, `updatedInput` or answers are ever produced, and unknown body fields are ignored.
+All §6 guards apply (e.g. an allow on a `.high` risk request is refused with `403`, the hold stays and the panel
+can still answer). Outcomes: `200` resolved; `404` no pending match; `409` more than one match, or the matching
+request was already resolved (finished permission requests are remembered 120 s); `400` bad verdict or body.
+Raw tool input stays on the local AF_UNIX claim request and never goes to Slack or the resolve endpoint. A late
+answer is bound to the claimed broker request id and cannot resolve a later identical request.
+The request leaves the panel like any resolved one (status `allowed`/`denied`); the audit log line records
+`source=external:<source>`.
 
 ### 2.3 Step-1 verbs (deadline: hook uses `curl -m 0.5`; daemon target ≤ 10 ms p95, §11)
 
@@ -614,7 +633,7 @@ Implemented in `installer/adeck_settings.py` (python3 stdlib, run as `python3 -I
 ## 8. Repository layout and part ownership
 
 ```
-agent-deck/
+/Users/ritesh.raj/Documents/agent-deck/
   Package.swift                      swift-tools-version:5.9, platforms [.macOS(.v14)], no dependencies
   config/capabilities.json           (core)
   Sources/AgentDeckCore/             library target; Foundation + Darwin + CoreGraphics only (no AppKit)
@@ -640,7 +659,7 @@ agent-deck/
   Resources/Info.plist, scripts/bundle.sh   → build/AgentDeck.app (ad-hoc signed)    (ui)
 ```
 
-- The spec refers to `Sources/Core/` and `Sources/UI/`; this layout maps them to the SwiftPM default paths of the
+- Spec §10.2 says `Sources/Core/` and `Sources/UI/`; this layout maps them to the SwiftPM default paths of the
   targets `AgentDeckCore` and `AgentDeckApp`.
 - `Package.swift` is created by plan Task 1 (core part) with all three targets; the UI part's first task adds
   nothing to it except, if needed, `linkerSettings` on `AgentDeckApp`.

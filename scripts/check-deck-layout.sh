@@ -16,6 +16,7 @@ main = temp/'main.swift'
 main.write_text((root/'checks/DeckLayoutChecks.swift').read_text())
 sources=[str(p) for p in (root/'Sources/AgentDeckApp').rglob('*.swift') if p.name != 'main.swift']
 objects=[str(p) for p in (bin_path/'AgentDeckCore.build').rglob('*.o')]
+if not objects: objects=[str(p) for p in bin_path.parents[1].glob('Intermediates.noindex/**/Debug/AgentDeckCore-t.build/Objects-normal/*/*.o')]
 if not objects: raise SystemExit('Run swift build before the hosted layout check')
 subprocess.run(['swiftc','-I',str(bin_path),*sources,str(main),*objects,'-o',str(app/'MacOS/LayoutCheck')],cwd=root,check=True)
 subprocess.run([str(app/'MacOS/LayoutCheck'),str(temp)],cwd=root,check=True)

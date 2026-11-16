@@ -188,7 +188,7 @@ public final class Daemon {
         }
         let outcome: String
         switch result { case .applied: outcome = "applied"; case .dropped(let why): outcome = "dropped:\(why.rawValue)" }
-        return "\(stamp) decision \(requestId) kind=\(kind) source=\(source.rawValue) result=\(outcome)"
+        return "\(stamp) decision \(requestId) kind=\(kind) source=\(source.name) result=\(outcome)"
     }
 
     /// Metadata-only line for a hold released because the hook shell holding it died (SIGKILL): the card can no longer reach Claude.
@@ -356,6 +356,10 @@ public final class Daemon {
             let word = verb.wireBody.split(separator: " ").first.map(String.init) ?? "-"
             logRoute(parts[1], hook.rawValue, input, verb: word + ((gate ? broker.lastPassReason : nil).map { " reason=\(safe($0))" } ?? ""))
             reply(conn, verb)
+        } else if req.method == "POST", parts == ["v1", "external", "claim"] {
+            externalClaim(req.body, conn)
+        } else if req.method == "POST", parts == ["v1", "external", "resolve"] {
+            externalResolve(req.body, conn)
         } else if req.method == "GET", parts.count == 3, parts[0] == "v1", parts[1] == "wait" {
             let id = parts[2]
             // The hook's own shell pid (older hooks send none: no liveness, previous behaviour). 0/1/negative are never a hook.
@@ -366,6 +370,45 @@ public final class Daemon {
         } else {
             conn.respond(status: 404, body: Data(), contentType: nil)
         }
+    }
+
+    private struct ExternalClaimBody: Decodable {
+        let session_id: String, tool_name: String, tool_input: JSONValue
+    }
+
+    private struct ExternalBody: Decodable {
+        let request_id: String, verdict: String, source: String
+        let message: String?
+    }
+
+    private func externalClaim(_ body: Data, _ conn: Connection) {
+        func json(_ status: Int, _ text: String) { conn.respond(status: status, body: Data(text.utf8), contentType: "application/json") }
+        guard let b = try? JSONDecoder().decode(ExternalClaimBody.self, from: body), !b.session_id.isEmpty, !b.tool_name.isEmpty
+        else { return json(400, #"{"claimed":false,"error":"bad request"}"#) }
+        let r = broker.claimExternal(sessionId: b.session_id, tool: b.tool_name, input: b.tool_input)
+        switch r {
+        case .claimed(let id): json(200, #"{"claimed":true,"request_id":"\#(safe(id))"}"#)
+        case .noMatch: json(404, #"{"claimed":false,"error":"no matching pending request"}"#)
+        case .conflict: json(409, #"{"claimed":false,"error":"ambiguous pending request"}"#)
+        }
+    }
+
+    /// Another channel answered a held PermissionRequest first (protocol §2.2). Only allow-once or deny; same guards as a click.
+    private func externalResolve(_ body: Data, _ conn: Connection) {
+        func json(_ status: Int, _ text: String) { conn.respond(status: status, body: Data(text.utf8), contentType: "application/json") }
+        guard let b = try? JSONDecoder().decode(ExternalBody.self, from: body), b.verdict == "allow" || b.verdict == "deny",
+              !b.source.isEmpty, !b.request_id.isEmpty else { return json(400, #"{"resolved":false,"error":"bad request"}"#) }
+        let source = DecisionSource.external(safe(b.source))
+        let r = broker.resolveExternal(requestId: b.request_id,
+                                       decision: b.verdict == "allow" ? .allow : .deny(note: b.message), source: source)
+        log.write("\(stamp()) external-resolve request=\(safe(b.request_id)) verdict=\(b.verdict) source=\(source.name) result=\(r)")
+        switch r {
+        case .resolved: json(200, #"{"resolved":true}"#)
+        case .noMatch: json(404, #"{"resolved":false,"error":"no matching pending request"}"#)
+        case .conflict: json(409, #"{"resolved":false,"error":"ambiguous or already resolved"}"#)
+        case .refused(let why): json(403, #"{"resolved":false,"error":"\#(why.rawValue)"}"#)
+        }
+        refreshTimers()
     }
 
     private func reply(_ conn: Connection, _ verb: GateVerb) {

@@ -126,6 +126,9 @@ public final class DecisionBroker {
     private func finish(_ id: String, _ status: RequestStatus, release: Bool = false, body: Data? = nil) {
         guard let e = entries.removeValue(forKey: id) else { return }
         order.removeAll { $0 == id }
+        if e.request.hook == .permissionRequest, e.request.channel != .notify {
+            finished.append((id, clock.now()))
+        }
         if body != nil || release { e.waiter?.finish(body) }
         emit(event(.requestUpdated(id: id, status: status), for: e.request))
     }
@@ -311,6 +314,36 @@ public final class DecisionBroker {
         guard let body = try? Envelopes.data(for: r, decision: decision) else { return .dropped(.notApplicable) }
         finish(id, status, body: body)
         return .applied
+    }
+
+    /// Finished permission requests, kept briefly so a late external answer says "already resolved" (409), not "unknown".
+    private var finished: [(id: String, at: Date)] = []
+    static let finishedMemory: TimeInterval = 120
+
+    /// Claims the exact pending request before another approval channel asks the user.
+    public func claimExternal(sessionId: String, tool: String, input: JSONValue) -> ExternalClaimResult {
+        let hits = order.filter {
+            guard let r = entries[$0]?.request else { return false }
+            return r.hook == .permissionRequest && r.channel != .notify && r.status == .pending
+                && r.sessionId == sessionId && r.tool == tool && r.fullInput == input
+        }
+        if hits.count > 1 { return .conflict }
+        return hits.first.map(ExternalClaimResult.claimed) ?? .noMatch
+    }
+
+    /// Resolves only the request id returned by `claimExternal`; every normal guard still applies.
+    public func resolveExternal(requestId: String, decision: Decision, source: DecisionSource) -> ExternalResolveResult {
+        let now = clock.now()
+        finished.removeAll { now.timeIntervalSince($0.at) > Self.finishedMemory }
+        guard let r = entries[requestId]?.request,
+              r.hook == .permissionRequest, r.channel != .notify, r.status == .pending else {
+            return finished.contains { $0.id == requestId } ? .conflict : .noMatch
+        }
+        switch resolve(id: requestId, decision: decision, source: source) {
+        case .applied: return .resolved
+        case .dropped(.unknownOrResolved): return .conflict
+        case .dropped(let why): return .refused(why)
+        }
     }
 
     public func dismiss(id: String) {
