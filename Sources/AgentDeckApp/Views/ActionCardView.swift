@@ -108,7 +108,10 @@ struct ActionCardView: View {
         }
         .padding(10)
         .frame(maxHeight: model.requestPresentation.collapsed.contains(request.id) ? nil : model.cardHeight, alignment: .top)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.orange.opacity(0.14)))
+        .background(ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.thinMaterial)
+            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.orange.opacity(0.14))
+        })
         .onAppear { if cachedContext == nil { cachedContext = ctx } }
     }
 

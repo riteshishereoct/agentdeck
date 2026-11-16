@@ -9,6 +9,7 @@ final class MenubarController: NSObject, NSMenuDelegate {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var toggles: [(NSMenuItem, KeyPath<AppSettings, Bool>)] = []
     private var settingsWindow: NSWindow?
+    private var aboutWindow: NSWindow?
     private var summary: NSMenuItem?
     private var showHideItem: NSMenuItem?
     private var bag = Set<AnyCancellable>()
@@ -16,6 +17,8 @@ final class MenubarController: NSObject, NSMenuDelegate {
     init(model: DeckModel, panel: PanelController) {
         self.model = model; self.panel = panel
         super.init()
+        model.openSettingsWindow = { [weak self] in self?.openSettings() }
+        model.openAboutWindow = { [weak self] in self?.openAbout() }
         item.button?.image = NSImage(systemSymbolName: "rectangle.stack", accessibilityDescription: "AgentDeck")
         item.button?.imagePosition = .imageLeading
         item.menu = buildMenu()
@@ -27,9 +30,9 @@ final class MenubarController: NSObject, NSMenuDelegate {
 
     private func buildMenu() -> NSMenu {
         let m = NSMenu(); m.delegate = self
-        func add(_ title: String, _ sel: Selector) { let i = NSMenuItem(title: title, action: sel, keyEquivalent: ""); i.target = self; m.addItem(i) }
+        func add(_ title: String, _ sel: Selector) { let i = NSMenuItem(title: title, action: sel, keyEquivalent: ""); i.target = self; icon(i); m.addItem(i) }
         func toggle(_ title: String, _ kp: KeyPath<AppSettings, Bool>, _ sel: Selector) {
-            let i = NSMenuItem(title: title, action: sel, keyEquivalent: ""); i.target = self; m.addItem(i); toggles.append((i, kp))
+            let i = NSMenuItem(title: title, action: sel, keyEquivalent: ""); i.target = self; icon(i); m.addItem(i); toggles.append((i, kp))
         }
         let summary = NSMenuItem(title: "", action: nil, keyEquivalent: ""); summary.isEnabled = false; m.addItem(summary); self.summary = summary
         add("Show", #selector(showHide)); showHideItem = m.items.last
@@ -44,13 +47,23 @@ final class MenubarController: NSObject, NSMenuDelegate {
         add("Install or repair hooks…", #selector(installHooks))
         add("Reload capabilities", #selector(reload))
         m.addItem(.separator())
+        add("About AgentDeck", #selector(openAbout))
+        m.addItem(.separator())
         add("Quit", #selector(quit))
         return m
+    }
+
+    /// Template SF Symbol from MenuCatalog; a missing symbol means no icon, never a crash.
+    private func icon(_ i: NSMenuItem) {
+        guard let name = MenuCatalog.symbol(for: i.title), let img = NSImage(systemSymbolName: name, accessibilityDescription: nil) else { i.image = nil; return }
+        let sized = img.withSymbolConfiguration(.init(pointSize: 13, weight: .regular, scale: .small)) ?? img
+        sized.isTemplate = true; i.image = sized
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         summary?.title = PillSummary.make(model.sessions).text
         showHideItem?.title = model.panelVisible ? "Hide" : "Show"
+        if let i = showHideItem { icon(i) }
         for (i, kp) in toggles { i.state = model.settings[keyPath: kp] ? .on : .off }
     }
 
@@ -74,5 +87,19 @@ final class MenubarController: NSObject, NSMenuDelegate {
         }
         NSApp.activate()
         settingsWindow?.makeKeyAndOrderFront(nil)
+        settingsWindow?.orderFrontRegardless() // activate() is only a request on macOS 14+; an explicit user action must not open behind Cursor
+    }
+
+    @objc private func openAbout() {
+        if aboutWindow == nil {
+            let w = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            w.title = "About AgentDeck"; w.isReleasedWhenClosed = false
+            w.contentView = NSHostingView(rootView: AboutView(model: model))
+            w.center(); aboutWindow = w
+        }
+        aboutWindow?.appearance = model.settings.appearance.nsAppearance
+        NSApp.activate()
+        aboutWindow?.makeKeyAndOrderFront(nil)
+        aboutWindow?.orderFrontRegardless() // activate() is only a request on macOS 14+; an explicit user action must not open behind Cursor
     }
 }

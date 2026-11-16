@@ -16,12 +16,19 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var launchAtLogin: Bool = false
     public var hideWhenIdle: Bool = true
     public var hoverToOpen: Bool = false
+    public var appearance: ThemeAppearance = .system
+    public var surface: ThemeSurface = .liquidGlass
+    public var accent: ThemeAccent = .system
+    public var panelOpacity: Double = ThemeFormat.defaultOpacity
+    public var animatedEmoji: Bool = true
+    public var companion: CompanionStyle = .pet
 
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
         case cursorBundleIds, gateOtherHosts, awayThresholdSeconds, gateScope, awayMode, quiet, privacy, paused
         case sounds, summarizer, launchAtLogin, hideWhenIdle, hoverToOpen
+        case appearance, surface, accent, panelOpacity, animatedEmoji, companion
     }
 
     // Per-key decodeIfPresent so a blob saved by an older build never resets the other settings.
@@ -40,5 +47,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? launchAtLogin
         hideWhenIdle = try c.decodeIfPresent(Bool.self, forKey: .hideWhenIdle) ?? hideWhenIdle
         hoverToOpen = try c.decodeIfPresent(Bool.self, forKey: .hoverToOpen) ?? hoverToOpen
+        // try? per field: an unknown raw value from a newer build resets only that field.
+        appearance = (try? c.decodeIfPresent(ThemeAppearance.self, forKey: .appearance)) ?? appearance
+        surface = (try? c.decodeIfPresent(ThemeSurface.self, forKey: .surface)) ?? surface
+        accent = (try? c.decodeIfPresent(ThemeAccent.self, forKey: .accent)) ?? accent
+        panelOpacity = ThemeFormat.clampOpacity((try? c.decodeIfPresent(Double.self, forKey: .panelOpacity)) ?? panelOpacity)
+        animatedEmoji = (try? c.decodeIfPresent(Bool.self, forKey: .animatedEmoji)) ?? animatedEmoji
+        companion = (try? c.decodeIfPresent(CompanionStyle.self, forKey: .companion)) ?? companion
     }
 }

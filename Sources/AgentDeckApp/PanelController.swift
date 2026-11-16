@@ -34,7 +34,13 @@ final class PanelController {
             p.allowsKey = open
             if open { p.makeKey() } else { p.resignKey() }
         }
-        model.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.refit() } }.store(in: &bag)
+        panel.appearance = model.settings.appearance.nsAppearance
+        model.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async {
+            guard let self else { return }
+            let a = self.model.settings.appearance.nsAppearance
+            if self.panel.appearance?.name != a?.name { self.panel.appearance = a }
+            self.refit()
+        } }.store(in: &bag)
         NotificationCenter.default.addObserver(forName: NSWindow.didMoveNotification, object: panel, queue: .main) { [weak self] _ in
             self?.moved()
         }

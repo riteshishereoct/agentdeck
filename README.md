@@ -27,6 +27,14 @@ Agent asks -> Deck lights up -> You decide -> Agent continues
 - Optional Haiku-based summaries, off by default.
 - No account, no cloud service, no network calls of its own.
 
+New in 0.2.0:
+
+- **About AgentDeck** window: version and build, hooks health, socket, requirements, signing, license; open it from the menu-bar or deck header menu.
+- **Menu icons:** SF Symbols on every menu item.
+- **Animated state emoji** per session row (working, needs you, waiting, ready, error, idle, quiet, ended). Loops run at 15 fps for 4 seconds after a state change, then rest; Reduce Motion and a setting turn them off.
+- **Liquid Glass** surfaces on macOS 26 (frosted material on macOS 14-25), with Appearance (System/Light/Dark), Surface, accent presets and opacity in Settings.
+- **Companion:** a Pet blob or rotating 3D geometry in the pill and panel header (or off). It animates for about 4 seconds after a state change and while hovered.
+
 ## Architecture
 
 ```
@@ -78,7 +86,7 @@ installer/uninstall.sh
 
 ## Limitations
 
-> **Known acceptance gap — FAIL.** The previous full warm-idle run peaked at 97.2 MiB RSS versus a 60 MiB target after text entry. Investigation found macOS text-input framework residency and no app-owned leak. The 0.1.1 binary has not had a new ten-minute native energy run, so its memory target remains unverified.
+> **Known acceptance gap: memory target FAIL.** The 0.2.0 ten-minute native run peaked at **62.9 MiB RSS versus the 60 MiB target** (earlier builds: 78.6 and 97.2 MiB; physical footprint 36.0 MiB). Energy in that run averaged 0.228% of one core (0.093% quiet, 1.72% active); with the panel expanded and a request open it measured 2.8% of one core (27.9% before the animation fix). Tests: 476/476 on an XCTest shim runner (Command Line Tools only); a real-XCTest run is pending.
 
 - Not notarized yet; ad-hoc signed. macOS may block the first launch: for a copy you trust, review System Settings → Privacy & Security → Open Anyway.
 - Claude Code only. Other agents are not tracked.

@@ -7,6 +7,7 @@ struct SessionRow: View {
     let onOpen: () -> Void
     let onCheckHooks: () -> Void
     let onRepairHooks: (@escaping (Bool) -> Void) -> Void
+    var animated: Bool = true
     @State private var repairResult: String?
 
     // No per-second re-render: the step line uses absolute clock times (G-NOW, battery).
@@ -15,7 +16,8 @@ struct SessionRow: View {
     private func content(now: Date) -> some View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Circle().fill(dot).frame(width: 7, height: 7)
+                    StateEmojiView(state: session.state, animated: animated).accessibilityHidden(true)
+                        .frame(width: 22, height: 22).background(Circle().fill(dot.opacity(0.18)))
                     Button(action: onOpen) { Text(RowFormat.title(session)).font(.callout).lineLimit(2).multilineTextAlignment(.leading) }
                         .buttonStyle(.plain).help("Open session").accessibilityLabel(openLabel)
                     Spacer()

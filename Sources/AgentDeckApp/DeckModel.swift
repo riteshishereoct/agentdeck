@@ -50,6 +50,9 @@ final class DeckModel: ObservableObject {
     var showPanel: (() -> Void)?
     var hidePanel: (() -> Void)?
     var onPanelMoveEnd: (() -> Void)?
+    /// Windows owned by MenubarController, reachable from the deck header even when macOS hides the menu-bar icon.
+    var openSettingsWindow: (() -> Void)?
+    var openAboutWindow: (() -> Void)?
     private var visibility = OverlayVisibility()
     private var pointerInside = false
     private(set) var pillPressed = false

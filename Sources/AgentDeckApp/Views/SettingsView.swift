@@ -6,6 +6,7 @@ import AgentDeckCore
 struct SettingsView: View {
     @ObservedObject var model: DeckModel
     @State private var bundleText = ""
+    @State private var opacityDraft: Double?
     @State private var loginError: String?
 
     private func bind<T>(_ kp: WritableKeyPath<AppSettings, T>) -> Binding<T> {
@@ -34,6 +35,42 @@ struct SettingsView: View {
                     }
                 Toggle("Also supervise other hosts", isOn: bind(\.gateOtherHosts))
             }
+            Section {
+                Picker("Theme", selection: bind(\.appearance)) {
+                    Text("System").tag(ThemeAppearance.system); Text("Light").tag(ThemeAppearance.light); Text("Dark").tag(ThemeAppearance.dark)
+                }
+                Picker("Surface", selection: bind(\.surface)) {
+                    Text("Liquid glass").tag(ThemeSurface.liquidGlass); Text("Frosted").tag(ThemeSurface.frosted); Text("Solid").tag(ThemeSurface.solid)
+                }
+                HStack {
+                    Text("Accent"); Spacer()
+                    ForEach(ThemeAccent.allCases, id: \.self) { a in
+                        Button { model.update { $0.accent = a } } label: {
+                            Circle().fill(a.swatch).frame(width: 18, height: 18)
+                                .overlay(Circle().strokeBorder(Color.primary, lineWidth: model.settings.accent == a ? 2 : 0).padding(-3))
+                                .frame(width: 26, height: 26).contentShape(Circle())
+                        }
+                        .buttonStyle(.plain).help(a.rawValue.capitalized).accessibilityLabel("Accent \(a.rawValue)")
+                        .accessibilityAddTraits(model.settings.accent == a ? .isSelected : [])
+                    }
+                }
+                HStack {
+                    Text("Opacity")
+                    // Draft while dragging; one settings save on release instead of one per tick.
+                    Slider(value: Binding(get: { opacityDraft ?? model.settings.panelOpacity }, set: { opacityDraft = $0 }),
+                           in: ThemeFormat.opacityRange) { editing in
+                        if !editing, let v = opacityDraft { model.update { $0.panelOpacity = ThemeFormat.clampOpacity(v) }; opacityDraft = nil }
+                    }
+                    Text("\(Int((opacityDraft ?? model.settings.panelOpacity) * 100))%").font(.caption).monospacedDigit().frame(width: 36, alignment: .trailing)
+                }
+                Picker("Companion", selection: bind(\.companion)) {
+                    Text("Pet").tag(CompanionStyle.pet); Text("3D geometry").tag(CompanionStyle.geometry); Text("Off").tag(CompanionStyle.off)
+                }
+                Toggle("Animated emoji", isOn: bind(\.animatedEmoji))
+            } header: { Text("Appearance") } footer: {
+                if #unavailable(macOS 26) { Text("Liquid glass needs macOS 26, falls back to frosted.").font(.caption) }
+                else { Text("Opacity applies to Frosted and Solid. Liquid glass is translucent by design.").font(.caption) }
+            }
             Section("Behaviour") {
                 Toggle("Open on hover", isOn: bind(\.hoverToOpen))
                 Text("Off: click the pill to open. Drag to move. Attention sounds and the needs-you label still work.").font(.caption).foregroundStyle(.secondary)
@@ -60,6 +97,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .preferredColorScheme(model.settings.appearance.colorScheme)
         .frame(width: 460, height: 560)
     }
 

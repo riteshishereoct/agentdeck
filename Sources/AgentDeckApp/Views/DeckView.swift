@@ -18,6 +18,9 @@ struct DeckView: View {
     @ObservedObject var model: DeckModel
     /// Resize grip drags, routed to PanelController (left grip?, phase, pointer delta since mouse-down).
     var onGrip: (Bool, GripPhase, CGVector) -> Void = { _, _, _ in }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    // @State, not @StateObject: DeckView must not observe pointer moves; only CompanionHost does.
+    @State private var tracker = PointerTracker()
     @State private var listHeight: CGFloat = 0
     @State private var panelSize: CGSize = .zero
     @State private var cardBounds: CardBounds?
@@ -30,7 +33,12 @@ struct DeckView: View {
         Group {
             if model.expanded { expandedBody(pill) } else { collapsedBody(pill) }
         }
-        .onHover { model.pointer(inside: $0) }
+        .tint(model.settings.accent.color)
+        .coordinateSpace(name: CompanionHost.space)
+        .onContinuousHover(coordinateSpace: .named(CompanionHost.space)) { phase in
+            if case .active(let p) = phase { tracker.point = p } else { tracker.point = nil }
+        }
+        .onHover { if !$0 { tracker.point = nil }; model.pointer(inside: $0) }
         .onPreferenceChange(CardBoundsKey.self) { bounds in cardBounds = bounds; reportVisibility() }
         .onChange(of: model.expanded) { _, _ in reportVisibility() }
     }
@@ -38,10 +46,17 @@ struct DeckView: View {
     private func collapsedBody(_ pill: PillSummary) -> some View {
         HStack(spacing: 8) {
             AttentionDot(color: pill.color.color, pulsing: model.pulsing, glowing: model.glowing)
+            let pillState = StateEmoji.pillState(model.sessions)
+            if model.settings.companion == .off {
+                // The pill is always on screen: only the short-lived, urgent needsYou state may loop here (idle-energy budget).
+                StateEmojiView(state: pillState, animated: model.settings.animatedEmoji && model.panelVisible && (pillState == .needsYou || !StateEmoji.for(pillState).continuous))
+            } else {
+                companion(size: 28)
+            }
             Text(pill.text).font(.callout.weight(.medium)).lineLimit(1)
         }
-        .padding(.horizontal, 14).padding(.vertical, 8)
-        .background(Capsule().fill(.regularMaterial))
+        .padding(.horizontal, 14).padding(.vertical, model.settings.companion == .off ? 8 : 5)
+        .deckSurface(in: Capsule(style: .continuous), settings: model.settings, interactive: true)
         .contentShape(Capsule())
         .overlay(PillHitTarget { began, activate in model.pillInteraction(began: began, activate: activate) })
         .accessibilityElement(children: .ignore)
@@ -51,6 +66,14 @@ struct DeckView: View {
     }
 
     private func expandPinned() { model.expandPanel() }
+
+    /// Fixed-size frame: the companion never changes the pill or panel size while it animates.
+    @ViewBuilder private func companion(size: CGFloat) -> some View {
+        CompanionHost(tracker: tracker, style: model.settings.companion, mood: CompanionMood.from(sessions: model.sessions),
+                      enabled: model.settings.animatedEmoji, visible: model.panelVisible,
+                      accent: model.settings.accent.color ?? .accentColor, size: size)
+            .allowsHitTesting(false)
+    }
 
     private func reportVisibility() {
         model.reportCardVisibility(id: model.expanded ? cardBounds?.id : nil,
@@ -84,8 +107,8 @@ struct DeckView: View {
         .frame(width: model.panelWidth)
         .background(GeometryReader { proxy in Color.clear.preference(key: PanelSizeKey.self, value: proxy.size) })
         .coordinateSpace(name: "DeckPanel")
-        .background(RoundedRectangle(cornerRadius: 14).fill(.regularMaterial))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .deckSurface(in: RoundedRectangle(cornerRadius: 18, style: .continuous), settings: model.settings)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .onPreferenceChange(ContentHeightKey.self) { listHeight = $0 }
         .onPreferenceChange(PanelSizeKey.self) { panelSize = $0; reportVisibility() }
     }
@@ -93,6 +116,7 @@ struct DeckView: View {
     private func header(_ pill: PillSummary) -> some View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
+                if model.settings.companion != .off { companion(size: 40) }
                 AttentionDot(color: pill.color.color, pulsing: model.pulsing, glowing: model.glowing)
                 Text(pill.text).font(.headline).lineLimit(1)
                 Spacer(minLength: 0)
@@ -101,11 +125,21 @@ struct DeckView: View {
             .overlay(PillHitTarget { began, activate in model.pillInteraction(began: began, activate: activate) })
             .help("Drag the header to move AgentDeck")
             Menu {
-                Toggle("Open on hover", isOn: Binding(get: { model.settings.hoverToOpen }, set: { value in model.update { $0.hoverToOpen = value } }))
+                Toggle(isOn: Binding(get: { model.settings.hoverToOpen }, set: { value in model.update { $0.hoverToOpen = value } })) {
+                    Label("Open on hover", systemImage: "cursorarrow.rays")
+                }
                 Text(model.settings.hoverToOpen ? "Hover to open · drag to move" : "Click to open · drag to move")
                 Divider()
-                Toggle("Privacy", isOn: Binding(get: { model.settings.privacy }, set: { value in model.update { $0.privacy = value } }))
-                Toggle("Attention sounds", isOn: Binding(get: { model.settings.sounds }, set: { value in model.update { $0.sounds = value } }))
+                Toggle(isOn: Binding(get: { model.settings.privacy }, set: { value in model.update { $0.privacy = value } })) {
+                    Label("Privacy", systemImage: "lock.shield")
+                }
+                Toggle(isOn: Binding(get: { model.settings.sounds }, set: { value in model.update { $0.sounds = value } })) {
+                    Label("Attention sounds", systemImage: "speaker.wave.2")
+                }
+                Divider()
+                Button { model.openSettingsWindow?() } label: { Label("Settings…", systemImage: "gearshape") }
+                Button { model.openSettingsWindow?(); model.openSetupHelp() } label: { Label("Setup & Help…", systemImage: "questionmark.circle") }
+                Button { model.openAboutWindow?() } label: { Label("About AgentDeck", systemImage: "info.circle") }
             } label: {
                 Image(systemName: "slider.horizontal.3").frame(width: 24, height: 24)
             }
@@ -136,7 +170,8 @@ struct DeckView: View {
                 ForEach(model.queue.visibleClosed(), id: \.requestId) { c in
                     Text(c.text).font(.callout).foregroundStyle(.secondary)
                         .padding(8).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.12)))
+                        .background(cardBacking(8, Color.secondary.opacity(0.12)))
+                        .transition(cardTransition)
                 }
                 let muted = model.mutedIds
                 ForEach(model.queue.ordered.filter { muted.contains($0.id) && model.revealedId != $0.id && !model.requestPresentation.collapsed.contains($0.id) }) { r in
@@ -150,7 +185,8 @@ struct DeckView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain).help("Show this request").accessibilityLabel("Show \(CardFormat.displayTool(r.tool)) request from session \(String(r.sessionId.prefix(6)))")
-                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.orange.opacity(0.12)))
+                    .background(cardBacking(8, Color.orange.opacity(0.12)))
+                    .transition(cardTransition)
                 }
                 ForEach(model.completionCards, id: \.sessionId) { card in
                     VStack(alignment: .leading, spacing: 4) {
@@ -160,12 +196,13 @@ struct DeckView: View {
                             Button("Open ↗") { model.openInCursor(sessionId: card.sessionId) }
                             Button("Dismiss") { model.dismissCompletion(sessionId: card.sessionId) }
                         }
-                    }.padding(8).background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.12)))
+                    }.padding(8).background(cardBacking(8, Color.green.opacity(0.12)))
+                    .transition(cardTransition)
                 }
                 Divider()
                 ForEach(model.sessions.filter { $0.state != .ended }) { s in SessionRow(session: s, onOpen: { model.openInCursor(sessionId: s.id) },
                     onCheckHooks: { model.daemon.checkHookHealth(sessionId: s.id) },
-                    onRepairHooks: { completion in model.daemon.repairHooks(completion: completion) }) }
+                    onRepairHooks: { completion in model.daemon.repairHooks(completion: completion) }, animated: model.settings.animatedEmoji && model.panelVisible) }
             } else {
                 ForEach(Array(model.sessions.enumerated()).filter { $0.element.state != .ended }, id: \.element.id) { index, session in
                     HStack {
@@ -180,6 +217,13 @@ struct DeckView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var cardTransition: AnyTransition { reduceMotion ? .identity : .opacity.combined(with: .scale(scale: 0.96)) }
+    /// Inner cards keep a material backing so text stays legible over transparent surfaces.
+    private func cardBacking(_ radius: CGFloat, _ tint: Color) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return ZStack { shape.fill(.thinMaterial); shape.fill(tint) }
     }
 }
 
